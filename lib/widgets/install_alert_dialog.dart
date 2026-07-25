@@ -28,30 +28,11 @@ class InstallAlertDialog extends HookConsumerWidget {
         subscriptionPrefix: 'app-install-profile',
       ),
     );
-    final publisher = switch (publisherState) {
-      StorageData(:final models) => models.firstOrNull,
-      _ => null,
-    };
-    if (publisher == null) {
-      return const BaseDialog(
-        title: BaseDialogTitle('Trust this app?'),
-        content: BaseDialogContent(
-          children: [
-            Center(
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 24),
-                child: SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              ),
-            ),
-          ],
-        ),
-        actions: [],
-      );
-    }
+    // Kind-0 is optional — only spin while the query is in flight.
+    // Settled empty/error must still allow install (cold release keys).
+    final publisher = publisherState.models.firstOrNull;
+    final isPublisherLoading =
+        publisherState is StorageLoading && publisher == null;
     final trustedSignerNotifier = useState(false);
     final signedInPubkey = ref.watch(Signer.activePubkeyProvider);
     final activeSigner = ref.watch(Signer.activeSignerProvider);
@@ -66,6 +47,8 @@ class InstallAlertDialog extends HookConsumerWidget {
           if (app.isRelaySigned) ...[
             AuthorContainer(
               profile: publisher,
+              pubkey: app.pubkey,
+              isLoading: isPublisherLoading,
               beforeText: 'The',
               afterText:
                   ' relay makes the ${app.name ?? app.identifier} app available but did not develop it or sign its APK. ',
@@ -91,6 +74,8 @@ class InstallAlertDialog extends HookConsumerWidget {
                     children: [
                       AuthorContainer(
                         profile: publisher,
+                        pubkey: app.pubkey,
+                        isLoading: isPublisherLoading,
                         beforeText:
                             '${app.name ?? app.identifier} is published by',
                         afterText: '.',
@@ -132,6 +117,8 @@ class InstallAlertDialog extends HookConsumerWidget {
                         AuthorContainer(
                           beforeText: '',
                           profile: publisher,
+                          pubkey: app.pubkey,
+                          isLoading: isPublisherLoading,
                           size: baseTextSize,
                         ),
                       ],

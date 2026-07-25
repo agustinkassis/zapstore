@@ -41,34 +41,18 @@ class RelevantWhoFollowContainer extends HookConsumerWidget {
     // Get signed-in user's pubkey
     final signedInPubkey = ref.watch(Signer.activePubkeyProvider);
 
-    // Query author profile from local storage (should already be preloaded)
+    // Kind-0 is optional display enrichment — never block on it.
+    // Target identity comes from the app event pubkey (always present).
     final authorState = ref.watch(
       query<Profile>(authors: {app.pubkey}, source: const LocalSource()),
     );
     final author = authorState.models.firstOrNull;
-
-    // If author not loaded yet, show loading
-    if (author == null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(loadingText, style: baseStyle),
-              const Gap(8),
-              const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(strokeWidth: 3),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    final targetNpub = author.npub;
+    final targetNpub = Utils.encodeShareableFromString(
+      app.pubkey,
+      type: 'npub',
+    );
+    final publisherLabel =
+        author?.nameOrNpub ?? targetNpub.abbreviateNpub();
 
     // Query preloaded zaps for the app (LocalSource only)
     final zapsState = ref.watch(
@@ -163,6 +147,8 @@ class RelevantWhoFollowContainer extends HookConsumerWidget {
                 _buildPublishedBySection(
                   context,
                   author,
+                  targetNpub,
+                  publisherLabel,
                   baseStyle,
                   boldStyle,
                   userZapped: userZapped,
@@ -176,7 +162,7 @@ class RelevantWhoFollowContainer extends HookConsumerWidget {
                     leadingText: userFollowsTarget ? 'You, ' : null,
                     commasOnly: true,
                     trailingText:
-                        ' and others follow ${author.nameOrNpub} on Nostr.',
+                        ' and others follow $publisherLabel on Nostr.',
                     textStyle: baseStyle,
                     avatarRadius: 10,
                   ),
@@ -250,13 +236,14 @@ class RelevantWhoFollowContainer extends HookConsumerWidget {
 
   Widget _buildPublishedBySection(
     BuildContext context,
-    Profile author,
+    Profile? author,
+    String targetNpub,
+    String publisherLabel,
     TextStyle? baseStyle,
     TextStyle? boldStyle, {
     required bool userZapped,
     required List<Profile> followedZappers,
   }) {
-    final targetNpub = author.npub;
     final avatarSize = (size ?? 14) * 1.4;
     final hasZapInfo = userZapped || followedZappers.isNotEmpty;
 
@@ -269,11 +256,15 @@ class RelevantWhoFollowContainer extends HookConsumerWidget {
           child: SizedBox(
             width: avatarSize,
             height: avatarSize,
-            child: ProfileAvatar(profile: author, radius: avatarSize / 2),
+            child: ProfileAvatar(
+              profile: author,
+              pubkey: app.pubkey,
+              radius: avatarSize / 2,
+            ),
           ),
         ),
       ),
-      TextSpan(text: author.nameOrNpub, style: boldStyle),
+      TextSpan(text: publisherLabel, style: boldStyle),
       TextSpan(text: ' (', style: baseStyle),
       TextSpan(
         text: 'view profile on Nostr',
