@@ -502,12 +502,14 @@ Future<void> _attemptAutoSignIn(Ref ref) async {
   }
 }
 
-/// Warm the contact-list cache after successful sign-in.
+/// Warm the contact-list cache after successful Amber session activation.
 ///
-/// This is a best-effort remote fetch used for stack sorting. It MUST NOT
-/// block the init chain — consumers of the contact list are reactive and
-/// will re-render when data lands locally. Blocking here gates the UI
-/// skeleton on a network round-trip, violating local-first guarantees.
+/// Runs for both interactive sign-in and [AmberSigner.attemptAutoSignIn]
+/// session restore. Device-key backup checks are NOT done here — those are
+/// interactive-only via [signInWithAmber] so cold-start restore never asks
+/// Amber to decrypt the backup.
+///
+/// Contact-list fetch is best-effort and MUST NOT block the init chain.
 void onSignInSuccess(Ref ref) {
   final pubkey = ref.read(Signer.activePubkeyProvider);
   if (pubkey == null) return;
@@ -532,12 +534,15 @@ void onSignInSuccess(Ref ref) {
           return const <ContactList>[];
         }),
   );
+}
 
-  // Offer device key backup/restore on first sign-in for this pubkey.
-  // Deferred to next frame so the navigator overlay is available.
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    unawaited(maybeOfferDeviceBackup(ref));
-  });
+/// Interactive Amber sign-in, then offer device-key backup create/restore.
+///
+/// Session restore must use [AmberSigner.attemptAutoSignIn] instead so Amber
+/// is not asked to decrypt the device-key backup on every app entry.
+Future<void> signInWithAmber(Ref ref) async {
+  await ref.read(amberSignerProvider).signIn();
+  await maybeOfferDeviceBackup(ref);
 }
 
 /// Observes app lifecycle events and manages package/storage state

@@ -36,11 +36,11 @@ class DeviceBackupService {
     required Ref ref,
     required Signer amberSigner,
   }) async {
-    final privateKeyHex = await ref
+    final deviceKey = await ref
         .read(deviceKeyServiceProvider)
         .getOrCreatePrivateKey();
     final ciphertext = await amberSigner.nip44Encrypt(
-      jsonEncode({'privateKeyHex': privateKeyHex}),
+      jsonEncode({'deviceKey': deviceKey}),
       amberSigner.pubkey,
     );
     final signed = await PartialCustomData(
@@ -79,18 +79,23 @@ class DeviceBackupService {
         backup.content,
         amberSigner.pubkey,
       );
-      final decoded = jsonDecode(plaintext);
-      if (decoded is! Map) return null;
-      final privateKeyHex = decoded['privateKeyHex'];
-      if (privateKeyHex is! String ||
-          privateKeyHex.length != 64 ||
-          Utils.derivePublicKey(privateKeyHex).isEmpty) {
-        return null;
-      }
-      return privateKeyHex;
+      return parseAmberBackupPayload(plaintext);
     } catch (_) {
       return null;
     }
+  }
+
+  /// Parses Amber device-key backup plaintext. Accepts `deviceKey` only.
+  static String? parseAmberBackupPayload(String plaintext) {
+    final decoded = jsonDecode(plaintext);
+    if (decoded is! Map) return null;
+    final deviceKey = decoded['deviceKey'];
+    if (deviceKey is! String ||
+        deviceKey.length != 64 ||
+        Utils.derivePublicKey(deviceKey).isEmpty) {
+      return null;
+    }
+    return deviceKey;
   }
 
   /// Returns whether Amber already holds a signed recovery record.

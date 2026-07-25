@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:models/models.dart';
@@ -79,6 +81,24 @@ void main() {
       );
     },
   );
+
+  test('Amber backup payload uses deviceKey', () {
+    expect(
+      DeviceBackupService.parseAmberBackupPayload(
+        jsonEncode({'deviceKey': '1' * 64}),
+      ),
+      '1' * 64,
+    );
+  });
+
+  test('Amber backup ignores legacy privateKeyHex payload', () {
+    expect(
+      DeviceBackupService.parseAmberBackupPayload(
+        jsonEncode({'privateKeyHex': '3' * 64}),
+      ),
+      isNull,
+    );
+  });
 
   test('normal Amber sign-in offers restore when backup key differs', () async {
     final tracking = _TrackingBackupService()..fetchedBackup = '1' * 64;

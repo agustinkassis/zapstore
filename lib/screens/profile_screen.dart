@@ -339,7 +339,7 @@ class _SignInButtonWithAmberCheck extends ConsumerWidget {
         if (!isAmberInstalled) {
           context.push('/profile/app/$kAmberNaddr');
         } else {
-          await ref.read(amberSignerProvider).signIn();
+          await signInWithAmber(ref.read(refProvider));
         }
       },
       builder: (context, child, callback, state) {

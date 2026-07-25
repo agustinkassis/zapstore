@@ -27,7 +27,7 @@ device-only data local.
   the device key; its content is the NIP-44 self-encrypted `settings` JSON.
 - Amber key backup: kind `30078`, `d=zapstore-device-key-backup`, authored and
   signed by Amber; its content is NIP-44 self-encrypted JSON with
-  `privateKeyHex`.
+  `deviceKey`. Older `privateKeyHex` payloads are ignored.
 - Private Purplebase stacks remain kind `30267`, authored by the device key:
   `zapstore-bookmarks`, `zapstore-installed-apps`, and
   `zapstore-unmanaged-apps`.
@@ -105,7 +105,7 @@ device-only data local.
 - [ ] Portable settings and trusted signers restore from `zapstore-device-state`
 - [ ] NWC and all temp settings never appear in device-state
 - [ ] Pasted-nsec and Amber restore both recover the same device state
-- [ ] Amber backup contains only its self-encrypted `privateKeyHex`
+- [ ] Amber backup contains only its self-encrypted `deviceKey`
 - [ ] Legacy installed-app recovery offers selected installs without claiming
       those apps are locally installed
 - [ ] New JSON and tag casing follows the defined convention
