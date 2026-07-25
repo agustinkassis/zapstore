@@ -8,16 +8,28 @@ FLUTTER := fvm flutter
 APK_DIR := build/app/outputs/flutter-apk
 
 # Target ABI. Defaults to arm64-v8a, so release output is unchanged.
-# Override for other architectures, e.g. `make debug ABI=armeabi-v7a`.
+# Override for other architectures, e.g. `make debug ABI=armeabi-v7a`, or
+# `make build-release ABI=universal` for a single all-ABI APK.
 ABI ?= arm64-v8a
+
+ifeq ($(ABI),universal)
+# Universal: one APK carrying every ABI (max compatibility). No split/target.
+ABI_FLAGS :=
+DEBUG_APK := $(APK_DIR)/app-debug.apk
+RELEASE_APK := $(APK_DIR)/app-release.apk
+ABI_VALID := 1
+else
 # Flutter names arm ABIs differently on the command line than in APK filenames.
 TARGET_PLATFORM_arm64-v8a := android-arm64
 TARGET_PLATFORM_armeabi-v7a := android-arm
 TARGET_PLATFORM_x86_64 := android-x64
 TARGET_PLATFORM := $(TARGET_PLATFORM_$(ABI))
-
+ABI_FLAGS := --split-per-abi --target-platform $(TARGET_PLATFORM)
 DEBUG_APK := $(APK_DIR)/app-$(ABI)-debug.apk
 RELEASE_APK := $(APK_DIR)/app-$(ABI)-release.apk
+ABI_VALID := $(if $(TARGET_PLATFORM),1,)
+endif
+
 CURRENT_VERSION := $(shell awk '/^version:/ {print $$2; exit}' pubspec.yaml)
 CURRENT_NAME := $(word 1,$(subst +, ,$(CURRENT_VERSION)))
 CURRENT_CODE := $(word 2,$(subst +, ,$(CURRENT_VERSION)))
@@ -25,7 +37,6 @@ CURRENT_CODE := $(word 2,$(subst +, ,$(CURRENT_VERSION)))
 # Reproducible release builds honor SOURCE_DATE_EPOCH (see spec/guidelines/INVARIANTS.md).
 SOURCE_DATE_EPOCH ?= $(shell git log -1 --format=%ct 2>/dev/null || date +%s)
 
-ABI_FLAGS := --split-per-abi --target-platform $(TARGET_PLATFORM)
 RED := \033[0;31m
 GREEN := \033[0;32m
 YELLOW := \033[1;33m
@@ -61,11 +72,11 @@ help:
 	@echo "  make deploy-debug build and install debug APK"
 	@echo ""
 	@echo "  ABI=<abi>         target architecture (default: arm64-v8a)"
-	@echo "                    one of: arm64-v8a, armeabi-v7a, x86_64"
+	@echo "                    one of: arm64-v8a, armeabi-v7a, x86_64, universal"
 
 check-abi:
-	@if [ -z "$(TARGET_PLATFORM)" ]; then \
-		printf "$(RED)Error: unsupported ABI '$(ABI)'. Use arm64-v8a, armeabi-v7a or x86_64.$(NC)\n"; \
+	@if [ -z "$(ABI_VALID)" ]; then \
+		printf "$(RED)Error: unsupported ABI '$(ABI)'. Use arm64-v8a, armeabi-v7a, x86_64 or universal.$(NC)\n"; \
 		exit 1; \
 	fi
 

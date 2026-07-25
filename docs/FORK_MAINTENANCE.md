@@ -55,25 +55,27 @@ Then close the PR (the merge already landed) or let GitHub mark it merged.
 
 ## Cutting a release
 
-The [`Release APKs`](.github/workflows/release.yml) workflow builds all three
-ABIs with `flutter build apk --release --split-per-abi` and attaches them to a
-GitHub Release.
+The [`Release APKs`](.github/workflows/release.yml) workflow builds a **universal
+APK** (`app-release.apk` — every ABI in one, installs on any device) plus the
+three per-ABI APKs, and attaches all of them to a GitHub Release. The universal
+APK is the recommended download for compatibility.
 
-**Publish:** push a tag.
+**Publish:** push a version tag. This repo tags **without** a `v` prefix.
 
 ```bash
-git tag v1.1.1        # match pubspec.yaml version
-git push origin v1.1.1
+git tag 1.1.1-multiarch      # or 1.1.2, etc.
+git push origin 1.1.1-multiarch
 ```
 
 **Dry run:** trigger it from the Actions tab (workflow_dispatch) to build without
 publishing — the APKs land as downloadable workflow artifacts.
 
-You can keep cutting releases locally instead, exactly as before:
+You can keep cutting releases locally instead:
 
 ```bash
-make deploy ABI=armeabi-v7a     # build + install one ABI on a device
-make build-release ABI=x86_64   # just build
+make build-release ABI=universal   # single all-ABI APK (app-release.apk)
+make deploy ABI=armeabi-v7a        # build + install one ABI on a device
+make build-release ABI=x86_64      # just one ABI
 ```
 
 ### Signing (optional)
