@@ -1,0 +1,79 @@
+name: Sync upstream
+
+# Keeps this fork's `master` current with zapstore/zapstore while preserving the
+# multi-arch patches carried here. It never rewrites `master`: it points a
+# rolling `sync/upstream` branch at the latest upstream commit and opens a PR.
+# Merge that PR (with a merge commit) to bring the changes in. If GitHub reports
+# conflicts, resolve them in the PR — see docs/FORK_MAINTENANCE.md.
+
+on:
+  schedule:
+    # Mondays 06:00 UTC. Adjust cadence here.
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: sync-upstream
+  cancel-in-progress: false
+
+env:
+  UPSTREAM_URL: https://github.com/zapstore/zapstore.git
+  SYNC_BRANCH: sync/upstream
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout fork master (full history)
+        uses: actions/checkout@v4
+        with:
+          ref: master
+          fetch-depth: 0
+
+      - name: Fetch upstream
+        run: |
+          git remote add upstream "$UPSTREAM_URL"
+          git fetch --no-tags upstream master
+
+      - name: Determine whether a sync is needed
+        id: check
+        run: |
+          if git merge-base --is-ancestor upstream/master HEAD; then
+            echo "needed=false" >> "$GITHUB_OUTPUT"
+            echo "master already contains upstream/master — nothing to sync."
+          else
+            count="$(git rev-list --count HEAD..upstream/master)"
+            echo "needed=true" >> "$GITHUB_OUTPUT"
+            echo "count=$count" >> "$GITHUB_OUTPUT"
+            echo "$count new upstream commit(s) to sync."
+          fi
+
+      - name: Point sync branch at latest upstream
+        if: steps.check.outputs.needed == 'true'
+        run: |
+          git push --force origin \
+            "refs/remotes/upstream/master:refs/heads/${SYNC_BRANCH}"
+
+      - name: Open or refresh the sync PR
+        if: steps.check.outputs.needed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COUNT: ${{ steps.check.outputs.count }}
+        run: |
+          existing="$(gh pr list --head "$SYNC_BRANCH" --state open \
+            --json number --jq '.[0].number // empty')"
+          if [ -n "$existing" ]; then
+            echo "PR #$existing already open; force-push refreshed its diff."
+            exit 0
+          fi
+          body="Automated by the Sync upstream workflow: new commits from zapstore/zapstore for this fork's master, preserving the multi-arch patches."
+          body="${body}"$'\n\n'"Merge with a MERGE COMMIT (not squash/rebase) to keep the patch history. On conflicts (usually only the Makefile) see docs/FORK_MAINTENANCE.md."
+          gh pr create \
+            --base master \
+            --head "$SYNC_BRANCH" \
+            --title "Sync upstream ($COUNT new commit(s))" \
+            --body "$body"
