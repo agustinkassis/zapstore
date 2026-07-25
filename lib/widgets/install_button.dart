@@ -131,8 +131,9 @@ class InstallButton extends ConsumerWidget {
           context,
           ref,
           progress: progress,
-          text: '${_formatProgress(progress)} (paused)',
+          text: 'Paused · ${_formatProgress(progress)}',
           fontSize: fontSize,
+          isPaused: true,
           onTap: () => _resumeDownload(ref),
         ),
 
@@ -144,7 +145,6 @@ class InstallButton extends ConsumerWidget {
                   progress: progress,
                   text: 'Verifying ${(progress * 100).round()}%',
                   fontSize: fontSize,
-                  onTap: null, // Cannot pause/cancel verification
                 )
               : _buildSimpleButton(
                   context,
@@ -366,12 +366,19 @@ class InstallButton extends ConsumerWidget {
     required String text,
     required double fontSize,
     VoidCallback? onTap,
+    bool isPaused = false,
   }) {
-    const actionColor = AppColors.darkActionPrimary;
-    final darkerAction = Color.alphaBlend(
-      Colors.black.withValues(alpha: 0.22),
-      actionColor,
+    final theme = Theme.of(context);
+    final baseColor = isPaused
+        ? theme.colorScheme.outline
+        : AppColors.darkActionPrimary;
+    final fillColor = Color.alphaBlend(
+      Colors.black.withValues(alpha: isPaused ? 0.35 : 0.22),
+      baseColor,
     );
+    final foreground = isPaused
+        ? theme.colorScheme.onSurface.withValues(alpha: 0.85)
+        : Colors.white;
 
     return Material(
       color: Colors.transparent,
@@ -381,7 +388,7 @@ class InstallButton extends ConsumerWidget {
         child: Container(
           constraints: const BoxConstraints(minHeight: 38),
           decoration: BoxDecoration(
-            color: actionColor,
+            color: baseColor,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Stack(
@@ -395,27 +402,41 @@ class InstallButton extends ConsumerWidget {
                     heightFactor: 1.0,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: darkerAction,
+                        color: fillColor,
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                   ),
                 ),
               ),
-              // Text
+              // Label (+ pause icon when paused)
               Center(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                     vertical: 10,
                     horizontal: 16,
                   ),
-                  child: Text(
-                    text,
-                    style: TextStyle(
-                      fontSize: fontSize,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (isPaused) ...[
+                        Icon(Icons.pause, size: fontSize + 2, color: foreground),
+                        const SizedBox(width: 6),
+                      ],
+                      Flexible(
+                        child: Text(
+                          text,
+                          style: TextStyle(
+                            fontSize: fontSize,
+                            fontWeight: FontWeight.bold,
+                            color: foreground,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
