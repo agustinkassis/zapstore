@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2026-07-25
+
+### Changed
+
+- Clearer welcome copy on the search screen
+- Store listing metadata (short/full description)
+
+### Fixed
+
+- Amber session restore no longer decrypts the device-key backup on every cold start (#385)
+- Trust dialog no longer hangs when the publisher has no kind-0 profile (#386)
+- Paused download button shows a distinct paused state
+
 ## [1.1.0] - 2026-07-17
 
 ### Added

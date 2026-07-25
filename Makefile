@@ -62,15 +62,16 @@ build-release: pub-get
 	@test -f $(RELEASE_APK)
 
 release:
-	@if [[ -n "$$(git status --porcelain)" ]]; then \
-		printf "$(RED)Error: Working tree is not clean. Commit or stash changes first.$(NC)\n"; \
-		exit 1; \
-	fi; \
-	current_branch="$$(git rev-parse --abbrev-ref HEAD)"; \
+	@current_branch="$$(git rev-parse --abbrev-ref HEAD)"; \
 	if [[ "$$current_branch" != "master" ]]; then \
 		printf "$(YELLOW)Warning: Not on master branch (currently on %s)$(NC)\n" "$$current_branch"; \
 		read -r -p "Continue anyway? (y/N) " reply; \
 		[[ "$$reply" =~ ^[Yy]$$ ]]; \
+	fi; \
+	if [[ -n "$$(git status --porcelain)" ]]; then \
+		printf "$(YELLOW)Working tree has local changes; they will be included in the release commit.$(NC)\n"; \
+		git status --short; \
+		printf "\n"; \
 	fi; \
 	printf "$(GREEN)Fetching latest changes...$(NC)\n"; \
 	git fetch origin; \
@@ -109,11 +110,13 @@ release:
 	printf "\n$(GREEN)Build successful!$(NC)\n"; \
 	printf "  APK: %s\n  Size: %s\n  SHA256: %s\n" "$(RELEASE_APK)" "$$apk_size" "$$apk_sha256"; \
 	printf "\n$(GREEN)Changes to be committed:$(NC)\n"; \
-	git diff --stat pubspec.yaml assets/seed.db; \
-	git add pubspec.yaml assets/seed.db; \
+	git add -u; \
+	git add assets/seed.db; \
+	git status --short; \
+	git diff --cached --stat; \
 	git commit -m "Release $$new_name+$$new_code"; \
 	trap - EXIT; \
-	tag_name="v$$new_name"; \
+	tag_name="$$new_name"; \
 	printf "\n$(GREEN)Creating git tag: %s$(NC)\n" "$$tag_name"; \
 	git tag -a "$$tag_name" -m "Release $$new_name (build $$new_code)"; \
 	printf "\n$(GREEN)=== Release Ready ===$(NC)\n"; \

@@ -60,3 +60,7 @@ reference/*
 bugs/
 
 .cursor/skills
+
+# SQLite side files from opening assets/seed.db locally
+*.db-shm
+*.db-wal
