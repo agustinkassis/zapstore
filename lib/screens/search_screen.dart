@@ -124,7 +124,8 @@ class SearchScreen extends HookConsumerWidget {
                     );
                   },
                 ),
-                if (ref.watch(isNewDeviceKeyProvider)) ...[
+                if (ref.watch(isNewDeviceKeyProvider) &&
+                    ref.watch(Signer.activePubkeyProvider) == null) ...[
                   const SizedBox(height: 12),
                   _NewDeviceKeyReminder(
                     onTap: () => context.go('/profile'),
@@ -239,7 +240,9 @@ class _NewDeviceKeyReminder extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Used Zapstore before? Restore your device key via nsec or by signing in with Amber.',
+                      'If you used Zapstore before and would like to restore '
+                      'your settings, tap here to sign in with Amber or input '
+                      'your device key',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: toastMuted,
                         height: 1.35,
