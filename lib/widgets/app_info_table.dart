@@ -5,6 +5,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:models/models.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:zapstore/services/package_manager/package_manager.dart';
 import 'package:zapstore/utils/extensions.dart';
 import 'package:zapstore/widgets/app_detail_widgets.dart';
 import 'package:zapstore/widgets/author_container.dart';
@@ -86,6 +87,21 @@ class AppInfoTable extends HookConsumerWidget {
 
     rows.add(_InfoRow(label: 'App ID', value: app.identifier));
 
+    final installedPackage = ref.watch(
+      installedPackageProvider(app.identifier),
+    );
+    final installerPackageName = installedPackage?.installerPackageName;
+    if (installerPackageName != null &&
+        installerPackageName != kZapstoreAppIdentifier) {
+      rows.add(
+        _InfoRow(
+          label: 'Installer',
+          value: installerPackageName,
+          copyValue: installerPackageName,
+        ),
+      );
+    }
+
     if (identityProof != null) {
       final npub = Utils.encodeShareableFromString(
         identityProof!.pubkey,
@@ -154,7 +170,6 @@ class AppInfoTable extends HookConsumerWidget {
       }
 
       if (fileMetadata!.versionCode != null) {
-        final installedPackage = app.installedPackage;
         final installedVersionCode = installedPackage?.versionCode;
         final availableVersionCode = fileMetadata!.versionCode!;
 

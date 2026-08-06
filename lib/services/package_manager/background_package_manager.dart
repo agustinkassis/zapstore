@@ -77,6 +77,7 @@ final class BackgroundPackageManager extends PackageManager {
               ? rawHashes.cast<String>().toList()
               : const [],
           installTime: null,
+          installerPackageName: app['installerPackageName'] as String?,
           canInstallSilently: app['canInstallSilently'] as bool? ?? false,
         );
       }

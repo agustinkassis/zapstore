@@ -26,6 +26,7 @@ class PackageInfo extends Equatable {
     this.signatureHashes = const [],
     this.name,
     this.installTime,
+    this.installerPackageName,
     this.canInstallSilently = false,
   });
 
@@ -35,6 +36,10 @@ class PackageInfo extends Equatable {
   final int? versionCode;
   final List<String> signatureHashes;
   final DateTime? installTime;
+
+  /// Package ID of the app that installed this package, if known.
+  /// Examples: `dev.zapstore.app`, `com.android.vending` (Play Store).
+  final String? installerPackageName;
   final bool canInstallSilently;
 
   @override
@@ -45,6 +50,7 @@ class PackageInfo extends Equatable {
     versionCode,
     signatureHashes,
     installTime,
+    installerPackageName,
     canInstallSilently,
   ];
 }

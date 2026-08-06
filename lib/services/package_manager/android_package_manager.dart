@@ -512,6 +512,8 @@ final class AndroidPackageManager extends PackageManager {
       versionCode: target.versionCode,
       signatureHashes: existingPkg?.signatureHashes ?? const [],
       installTime: DateTime.now(),
+      installerPackageName:
+          existingPkg?.installerPackageName ?? kZapstoreAppIdentifier,
       canInstallSilently: existingPkg?.canInstallSilently ?? false,
     );
     state = state.copyWith(installed: {...state.installed, appId: newPkg});
@@ -794,6 +796,7 @@ final class AndroidPackageManager extends PackageManager {
             ? rawHashes.cast<String>().toList()
             : <String>[];
         final canInstallSilently = app['canInstallSilently'] as bool? ?? false;
+        final installerPackageName = app['installerPackageName'] as String?;
 
         if (canInstallSilently) anyCanInstallSilently = true;
 
@@ -805,6 +808,7 @@ final class AndroidPackageManager extends PackageManager {
             versionCode: versionCode,
             signatureHashes: signatureHashes,
             installTime: null,
+            installerPackageName: installerPackageName,
             canInstallSilently: canInstallSilently,
           );
         }

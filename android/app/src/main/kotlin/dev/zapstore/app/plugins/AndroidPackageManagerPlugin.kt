@@ -1854,8 +1854,22 @@ class AndroidPackageManagerPlugin :
                     "versionName" to pkg.versionName,
                     "versionCode" to versionCode,
                     "signatureHashes" to getSignatureHashes(pkg.packageName),
+                    "installerPackageName" to getInstallerPackageName(pkg.packageName),
                     "canInstallSilently" to canInstallSilently(pkg.packageName)
             )
+        }
+    }
+
+    private fun getInstallerPackageName(packageName: String): String? {
+        return try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                context.packageManager.getInstallSourceInfo(packageName).installingPackageName
+            } else {
+                @Suppress("DEPRECATION")
+                context.packageManager.getInstallerPackageName(packageName)
+            }
+        } catch (_: Exception) {
+            null
         }
     }
 

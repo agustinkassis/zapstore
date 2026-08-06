@@ -26,6 +26,7 @@ class InstalledPackagesSnapshot {
               'version': p.version,
               'versionCode': p.versionCode,
               'signatureHashes': p.signatureHashes,
+              'installerPackageName': p.installerPackageName,
               'canInstallSilently': p.canInstallSilently,
             },
           )
@@ -87,6 +88,7 @@ class InstalledPackagesSnapshot {
           versionCode: map['versionCode'] as int?,
           signatureHashes: signatureHashes,
           installTime: null,
+          installerPackageName: map['installerPackageName'] as String?,
           canInstallSilently: (map['canInstallSilently'] as bool?) ?? false,
         );
       }
