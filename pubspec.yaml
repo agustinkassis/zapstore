@@ -2,7 +2,7 @@ name: zapstore
 description: Zapstore mobile app
 publish_to: none
 
-version: 1.1.1+1008
+version: 1.1.2+1009
 
 environment:
   sdk: ^3.8.1
@@ -29,7 +29,7 @@ dependencies:
   skeletonizer: ^2.1.0+1
   dart_emoji: ^0.2.0+2
   easy_image_viewer: ^1.5.1
-  models: ^0.3.4
+  models: ^0.3.5
   purplebase: ^0.3.4
   amber_signer: ^0.4.0
   hooks_riverpod: ^2.6.1
@@ -64,7 +64,7 @@ dependency_overrides:
     # path: ../models
     git:
       url: https://github.com/purplebase/models
-      ref: 5e48ed94c79b6c8f1564f986d14aa85352771f9f
+      ref: 7c5cb57b976b4efa77320c16434e41422d79b8cd
   purplebase:
     # path: ../purplebase
     git:
